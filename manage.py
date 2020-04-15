@@ -4,24 +4,12 @@
 # @File    : manage.py
 
 
-from flask import Flask, render_template, views
 from flask_script import Manager
 
 
-app = Flask(__name__)
-
-
-class ApiDocView(views.MethodView):
-
-    @staticmethod
-    def get():
-        return render_template('swagger/index.html')
-
-
-app.add_url_rule('/api/docs', view_func=ApiDocView.as_view('swagger'))
-
-
 if __name__ == '__main__':
+    from app import create_app
+    app = create_app()
     manage = Manager(app)
     manage.run()
 
