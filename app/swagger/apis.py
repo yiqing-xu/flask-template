@@ -3,7 +3,6 @@
 # @Author  : xuyiqing
 # @File    : views.py
 import yaml
-from urllib.parse import urlparse
 
 from werkzeug.datastructures import FileStorage
 from flask import render_template, request, make_response
@@ -25,10 +24,9 @@ class ApiDocView(Resource):
         进入swagger渲染页面，doc为预览接口文档文件名
         :return:
         """
-        port = urlparse(request.url).netloc.split(':')[1]
         doc = self.args.get('doc')
         return make_response(render_template('swagger/index.html',
-                                             port=port,
+                                             domain=request.host,
                                              doc=doc if doc else 'swagger.yaml'))
 
     def post(self):

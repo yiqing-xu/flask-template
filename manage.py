@@ -6,7 +6,6 @@
 
 from flask_script import Manager
 
-
 if __name__ == '__main__':
     from app import create_app
     app = create_app()

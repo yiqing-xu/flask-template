@@ -39,7 +39,8 @@
     window.onload = function() {
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
-        url: "http://127.0.0.1:{{ port }}/static/swagger/docs/{{ doc }}",
+        url: "http://{{ domain }}/static/swagger/docs/{{ doc }}",
+        {#  url: "{{ url_for('static', filename='swagger/docs/{{ doc }}') }}",#}
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [

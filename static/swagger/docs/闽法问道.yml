@@ -1,0 +1,3045 @@
+swagger: "2.0"
+info:
+  description: "闽法问道"
+  version: "v1"
+  title: "闽法问道"
+host: "192.168.11.24:7888"
+basePath: "/api/v1/"
+
+schemes:
+- "https"
+- "http"
+
+tags:
+- name: "账号管理"
+  description: "登录、用户、权限，主页"
+- name: "综合管理"
+  description: "板块，专题，轮播，文件"
+- name: "业务交流"
+  description: "专题、帖子、评论，话题"
+- name: "专家答疑"
+  description: "专家、提问、回答，层级"
+- name: '权威发布'
+  description: '公告、新闻、权威、发布'
+- name: '自主学习'
+  description: '课程、学习、外链、自主'
+- name: '消息服务'
+  description: 'websocket、asgi、消息'
+
+paths:
+
+  /login/:
+    post:
+      tags:
+        - "账号管理"
+      summary: "登录"
+      description: "基于JWT的登录认证。1：formData用户密码登录{username,password}，2：query参数UserID，生成该用户token"
+      parameters:
+        - name: username
+          in: formData
+          type: string
+          description: 用户名
+        - name: password
+          type: string
+          in: formData
+          description: 密码
+        - name: UserID
+          in: query
+          type: string
+          description: 经加密的用户唯一标识
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/LoginResponse'
+        400:
+          description: "用户参数错误"
+          schema:
+            $ref: '#/definitions/CustomError'
+        401:
+          description: "未登录认证"
+          schema:
+            $ref: '#/definitions/CustomError'
+        403:
+          description: "没有权限访问"
+        500:
+          description: "后台错误"
+          schema:
+            $ref: '#/definitions/Error'
+  /userinfo/{id}/:
+    get:
+      tags:
+        - "账号管理"
+      summary: '查询用户信息'
+      parameters:
+        - name: id
+          type: string
+          in: path
+          description: 用户id
+          required: true
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/UserInfo'
+    put:
+      tags:
+        - '账号管理'
+      summary: '修改用户信息'
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          description: 用户id
+          required: true
+        - name: signature
+          in: formData
+          type: string
+          description: 签名
+        - name: avatar
+          in: formData
+          type: file
+          description: 头像
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/UserPutInfo'
+    post:
+      tags:
+        - '账号管理'
+      summary: 修改密码
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          description: 用户id
+          required: true
+        - name: username
+          in: formData
+          type: string
+          description: 用户名
+        - name: old_password
+          in: formData
+          type: string
+          description: 旧密码
+        - name: new_password
+          in: formData
+          type: string
+          description: 新密码
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/UserPutInfo'
+
+  /home/info/{id}/:
+    get:
+      tags:
+        - '账号管理'
+      summary: '查询提问数，回答数，关注，粉丝数'
+      description:
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 主页用户id
+          required: true
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/HomeInfo'
+  /home/focus/{id}/:
+    get:
+      tags:
+        - '账号管理'
+      summary: '查询关注的专题列表'
+      description:
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 主页用户id
+          required: true
+        - name: category
+          in: query
+          type: string
+          description: 0：关注的专题，1：关注的专家
+          enum:
+            - 0
+            - 1
+          default: 0
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/TopicsResponse'
+
+  /sign/:
+    put:
+      tags:
+        - "账号管理"
+      summary: "用户签到"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: status
+          type: string
+          in: query
+          description: 签到状态 '0'：取消签到， '1'：不传默认为'1'表示签到
+          enum:
+            - '0'
+            - '1'
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/Success'
+    get:
+      tags:
+        - "账号管理"
+      summary: "查询当前用户签到状态"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: token
+          in: header
+        - name: user_id
+          type: integer
+          in: query
+          description: 查询user_id对应用户的签到状态，本月签到次数
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/SignResponse'
+  /star/:
+    put:
+      tags:
+        - '账号管理'
+      summary: '收藏'
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: title
+          type: string
+          in: formData
+          description: 对象标题
+          required: true
+        - name: star_id
+          type: string
+          in: formData
+          description: 收藏对象id
+        - name: star_type
+          type: integer
+          in: formData
+          description: 收藏的对象所属模块 0：业务交流 1：专家答疑 2：自主学习
+          enum:
+            - 0
+            - 1
+            - 2
+        - name: status
+          type: string
+          in: formData
+          description: 收藏状态 0：取消收藏，1：收藏，默认为1进行收藏
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/StarPutResponse'
+    get:
+      tags:
+        - '账号管理'
+      summary: '查询收藏夹'
+      description:
+      parameters:
+        - name: user_id
+          type: integer
+          in: query
+          description: 用户id
+        - name: star_type
+          in: query
+          type: integer
+          description: 收藏的对象所属模块 0：业务交流 1：专家答疑 2：自主学习，不传会查询所有
+          enum:
+            - 0
+            - 1
+            - 2
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/StarGetResponse'
+
+  /star/status/:
+    get:
+      tags:
+        - '账号管理'
+      summary: '获取收藏状态'
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: ids
+          in: query
+          type: string
+          description: 需查询的对象id, list形式
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/StarStausResponse'
+  /focus/:
+    get:
+      tags:
+        - '账号管理'
+      summary: '查询关注状态'
+      description:
+      parameters:
+        - name: focus_ids
+          in: query
+          type: string
+          description: 对象id
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/FocusStatusResponse'
+    put:
+      tags:
+        - '账号管理'
+      summary: '关注'
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: title
+          in: query
+          type: string
+          description: 名称
+        - name: focus_id
+          in: query
+          type: string
+          description: 对象id
+        - name: status
+          in: query
+          type: string
+          description: 状态，0：取消关注，1关注
+        - name: category
+          in: query
+          type: string
+          description: 分类，0：专题，1专家
+          enum:
+            - 0
+            - 1
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/FocusResponse'
+  /visit/{id}/:
+    get:
+      tags:
+        - '账号管理'
+      summary: '访客记录'
+      description:
+      parameters:
+        - name: id
+          type: string
+          in: path
+          description: 主页用户的id
+          required: true
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/VisitResponse'
+
+  /topics/:
+    get:
+      tags:
+        - "综合管理"
+      summary: "查询专题数据"
+      description: "查询业务交流板块和主题，其中一个板块下有多个专题"
+      parameters:
+        - name: category
+          in: query
+          type: integer
+          required: true
+          description: 专题分类 0：业务交流 1：专家答疑 2：自主学习，3：权威发布
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        - name: keyword
+          in: query
+          type: string
+          description: 关键词搜索
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/TopicsResponse'
+  /topics/{id}/:
+    get:
+      tags:
+        - "综合管理"
+      summary: "查询专题详情"
+      description:
+      parameters:
+        - name: id
+          type: string
+          in: path
+          description: 专题id
+          required: true
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/TopicsDetailResponse'
+  /topics/hot/list/:
+    get:
+      tags:
+        - "综合管理"
+      summary: "获取热门专题"
+      description:
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/TopicsSearchListResponse'
+  /carousel/:
+    get:
+      tags:
+        - '综合管理'
+      summary: '轮播图'
+      description:
+      parameters:
+        - name: category
+          in: query
+          type: integer
+          enum:
+            - 0
+            - 1
+          default: 0
+          description: 0：首页，1：自主学习
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/CarouselResponse'
+
+  /parser/:
+    post:
+      tags:
+        - '综合管理'
+      summary: 'docx文件解析'
+      description: '解析docx文件内容，并解码图片的base64码，自动保存，替换img标签的src为url'
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: file
+          in: formData
+          type: file
+          required: true
+          description: docx文件
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/ParserReponse'
+  /pic/:
+    post:
+      tags:
+        - '综合管理'
+      summary: '上传图片'
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: pic
+          in: formData
+          type: file
+          required: true
+          description: 图片
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/PicResponse'
+    delete:
+      tags:
+        - '综合管理'
+      summary: '删除图片'
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: pic_id
+          in: body
+          type: string
+          required: true
+          description: 需删除的图片id
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/Success'
+  /file/:
+    get:
+      tags:
+        - '综合管理'
+      summary: '下载文件'
+      description: '下载文件接口，浏览器会直接写入硬盘'
+      parameters:
+        - name: file_id
+          in: query
+          type: string
+          description: 文件id
+          required: true
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/Success'
+    post:
+      tags:
+        - '综合管理'
+      summary: '上传文件'
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: file
+          in: formData
+          type: file
+          description: 文件
+          required: true
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/FileResponse'
+    delete:
+      tags:
+        - '综合管理'
+      summary: '删除文件'
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: file_id
+          in: query
+          type: string
+          required: true
+          description: 需删除的文件id
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/Success'
+  /feedback/:
+    post:
+      tags:
+        - '综合管理'
+      summary: '意见反馈'
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: content
+          type: string
+          required: true
+          in: formData
+          description: '反馈内容'
+        - name: contact
+          type: string
+          in: formData
+          description: 联系方式
+        - name: pics
+          type: file
+          in: formData
+          description: 图片
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/Success'
+  /ops/:
+    get:
+      tags:
+        - "综合管理"
+      summary: "运维热线"
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/OPSResponse'
+
+  /search/:
+    get:
+      tags:
+        - '综合管理'
+      summary: '综合搜索'
+      description: '专题，帖子，问答，用户'
+      parameters:
+        - name: keyword
+          in: query
+          type: string
+          description: 关键词
+          required: true
+        - name: page_size
+          in: query
+          type: string
+          description: 一页最大数量，传2
+          required: true
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/SearchData'
+
+  /posts/:
+    get:
+      tags:
+        - "业务交流"
+      summary: "查询帖子列表，关键词搜索"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          description: JWT+空格+token
+          in: header
+        - name: topic_id
+          in: query
+          type: string
+          description: 专题id
+        - name: creator_id
+          in: query
+          type: string
+          description: 发帖人
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+        - name: "keyword"
+          in: "query"
+          description: "搜索关键词"
+          type: string
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/PostsResponse'
+    post:
+      tags:
+        - "业务交流"
+      summary: "发帖"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: topic_id
+          in: query
+          type: string
+          description: 专题id
+          required: true
+        - name: title
+          in: formData
+          type: string
+          description: 帖子标题
+          required: true
+        - name: content
+          in: formData
+          type: string
+          description: 帖子内容
+          required: true
+        - name: pics
+          in: formData
+          type: file
+          description: 帖子图片
+        - name: is_anonymous
+          in: formData
+          type: integer
+          description: 是否匿名，1为匿名
+          enum:
+            - 0
+            - 1
+        - name: attachment
+          in: formData
+          type: string
+          description: 附件id，以英文逗号隔开
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/PostCreateResponse'
+  /posts/{id}/:
+    get:
+      tags:
+        - "业务交流"
+      summary: "查询帖子详情"
+      description:
+      parameters:
+        - name: id
+          type: string
+          in: path
+          description: 帖子id
+          required: true
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/PostDetailResponse'
+    put:
+      tags:
+        - "业务交流"
+      summary: "帖子点赞"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          description: 帖子id
+          required: true
+        - name: status
+          in: query
+          type: string
+          description: 点赞行为，0为取消点赞，1为点赞
+          enum:
+            - 0
+            - 1
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/PostLikeResponse'
+
+    delete:
+      tags:
+        - "业务交流"
+      summary: "删除帖子"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          type: string
+          in: path
+          description: 帖子id
+          required: true
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/Success'
+  /posts/{id}/comments/:
+    get:
+      tags:
+        - "业务交流"
+      summary: "查询帖子评论列表"
+      description: "查询第二级评论时传入parent_id作为过滤条件"
+      parameters:
+        - name: Authorization
+          type: string
+          description: JWT+空格+token
+          in: header
+        - name: id
+          type: string
+          in: path
+          description: 帖子id
+          required: true
+        - name: parent_id
+          type: string
+          in: query
+          description: 评论的父级id
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/PostCommentsResponse'
+    post:
+      tags:
+        - "业务交流"
+      summary: "发表评论"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          description: 帖子id
+          required: true
+        - name: content
+          in: formData
+          type: string
+          description: 评论内容
+          required: true
+        - name: pics
+          in: formData
+          type: file
+          description: 帖子图片
+        - name: replier_id
+          in: formData
+          type: string
+          required: true
+          description: 被回复人id
+        - name: parent_id
+          in: formData
+          type: string
+          description: 楼中楼回复父级评论id
+        - name: level
+          in: formData
+          type: integer
+          description: 层级，楼为1，楼中层为2，层中再回复为3
+          enum:
+            - 1
+            - 2
+            - 3
+          default: 1
+        - name: is_anonymous
+          in: formData
+          type: integer
+          description: 是否匿名，0为实名，1为匿名
+          enum:
+            - 0
+            - 1
+          default: 0
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/Success'
+    put:
+      tags:
+        - "业务交流"
+      summary: "评论点赞"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          description: 帖子id
+          required: true
+        - name: comment_id
+          in: query
+          type: string
+          description: 评论id
+          required: true
+        - name: status
+          in: query
+          type: string
+          description: 点赞行为，0为取消点赞，1为点赞
+          enum:
+            - 0
+            - 1
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/CommentLikeResponse'
+    delete:
+      tags:
+        - "业务交流"
+      summary: "删除评论"
+      description: "删除上级会同步删除子级"
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          description: 帖子id
+          required: true
+        - name: comment_id
+          type: string
+          in: query
+          description: 评论id
+          required: true
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/Success'
+  /posts/hot/list/:
+    get:
+      tags:
+        - "业务交流"
+      summary: "帖子热榜"
+      description:
+      parameters:
+        - name: days
+          type: string
+          in: query
+          description: 热榜向前取得天数
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/PostHotListResponse'
+  /theme/:
+    get:
+      tags:
+        - '业务交流'
+      summary: '查询话题列表'
+      description:
+      parameters:
+        - name: cate
+          type: integer
+          in: query
+          description: 1：今日，2：本周，3：本月，不传查话题热榜和换一换
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/ThemeListResponse'
+  /associate/theme/:
+    get:
+      tags:
+        - '业务交流'
+      summary: 联想话题名
+      parameters:
+        - name: keyword
+          type: string
+          in: query
+          description: 关键词，以该词开头联想
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/ThemeNameResponse'
+
+  /theme/{id}/:
+    get:
+      tags:
+        - '业务交流'
+      summary: '话题详情'
+      description:
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 话题id
+          required: true
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/ThemeDetailResponse'
+  /theme/posts/:
+    get:
+      tags:
+        - "业务交流"
+      summary: "查询热门动态，热门话题下的帖子列表"
+      description:
+      parameters:
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+        - name: theme_id
+          in: query
+          description: 热门话题id
+          type: string
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/PostsResponse'
+
+  /experts/:
+    get:
+      tags:
+        - "专家答疑"
+      summary: "查询专家列表"
+      description:
+      parameters:
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/ExpertListResponse'
+  /questions/:
+    post:
+      tags:
+        - '专家答疑'
+      summary: "提问专家"
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: expert_id
+          in: formData
+          type: string
+          description: 专家id
+          required: true
+        - name: title
+          in: formData
+          type: string
+          description: 标题
+        - name: content
+          in: formData
+          type: string
+          description: 内容
+          required: true
+        - name: parent_id
+          in: formData
+          type: string
+          description: 父级问题的id，追问时需要传入
+        - name: pics
+          in: formData
+          type: file
+          description: 问题图片
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/QuestionCreateResponse'
+    get:
+      tags:
+        - '专家答疑'
+      summary: '查询问题一级列表及常见问题'
+      description: '针对某个专家的id查询'
+      parameters:
+        - name: expert_id
+          type: string
+          in: query
+          description: 按照被提问专家id查询
+        - name: creator_id
+          type: string
+          in: query
+          description: 按照提问者的id查询
+        - name: hot_question
+          type: string
+          in: query
+          description: 查询常见问题传入true
+          enum:
+            - 'true'
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          type: string
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功.
+          schema:
+            $ref: '#/definitions/QuestionListResponse'
+  /questions/{id}/:
+    get:
+      tags:
+        - '专家答疑'
+      summary: '查询问题层级详情'
+      description:
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 问题id
+          required: true
+      responses:
+        200:
+          description: 成功.
+          schema:
+            $ref: '#/definitions/QuestionDetailResponse'
+    put:
+      tags:
+        - '专家答疑'
+      summary: '问题点赞'
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          description: 问题id
+          required: true
+        - name: status
+          in: body
+          type: string
+          description: 状态，0:取消点赞，1：点赞
+      responses:
+        200:
+          description: 成功.
+          schema:
+            $ref: '#/definitions/QuestionLikeResponse'
+    delete:
+      tags:
+        - '专家答疑'
+      summary: '删除问题'
+      description: '同步底层的子级问题同时会被删除'
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 需要删除的当前层级的问题id
+          required: true
+      responses:
+        200:
+          description: 成功.
+          schema:
+            $ref: '#/definitions/Success'
+
+  /questions/{id}/answers/:
+    post:
+      tags:
+        - '专家答疑'
+      summary: '新建问题的回答'
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          in: path
+          type: string
+          required: true
+          description: 问题id
+        - name: content
+          in: formData
+          type: string
+          description: 回答内容
+          required: true
+        - name: pics
+          in: formData
+          type: file
+          description: 图片
+      responses:
+        200:
+          description: 成功.
+          schema:
+            $ref: '#/definitions/AnswerCreateResponse'
+    delete:
+      tags:
+        - '专家答疑'
+      summary: '删除回答'
+      description: '将当前的问答的回答置为None'
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 需要删除的当前层级的问题id
+          required: true
+      responses:
+        200:
+          description: 成功.
+          schema:
+            $ref: '#/definitions/Success'
+  /questions/hot/list/:
+    get:
+      tags:
+        - "专家答疑"
+      summary: "问题热榜"
+      description:
+      parameters:
+        - name: days
+          type: string
+          in: query
+          description: 热榜向前取得天数
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/QuestionHotListResponse'
+
+  /announce/:
+    get:
+      tags:
+        - '权威发布'
+      summary: '查询文章列表'
+      description:
+      parameters:
+        - name: board_id
+          in: query
+          type: string
+          description: 板块id
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/AnnounceListResponse'
+  /announce/{id}/:
+    get:
+      tags:
+        - '权威发布'
+      summary: '查询文章详情'
+      description:
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 文章id
+          required: true
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/AnnounceResponse'
+  /hot/announce/:
+    get:
+      tags:
+        - '权威发布'
+      summary: '热点公告'
+      description:
+      parameters:
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/HotAnnounceResponse'
+  /index/announce/:
+    get:
+      tags:
+        - '权威发布'
+      summary: '首页公告'
+      description:
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/IndexAnnounceResponse'
+
+  /course/:
+    get:
+      tags:
+        - '自主学习'
+      summary: '精品推荐'
+      description:
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: 板块id
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/CourseResponse'
+  /index/course/:
+    get:
+      tags:
+        - '自主学习'
+      summary: '首页推荐'
+      description:
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/IndexCourseResponse'
+
+  ws://{ip:port or domain}/ws/message/:
+    get:
+      tags:
+        - '消息服务'
+      summary: '消息服务'
+      description: '使用websocket连接，进行CS的实时消息通讯，在‘获取积分’、‘关注’、‘问答’，‘收藏’，‘评论’，‘点赞’时
+                    会进行消息实时提醒，'
+      parameters:
+        - name: token
+          in: query
+          type: string
+          required: true
+          description: token
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/WsResponse'
+
+  /message/:
+    get:
+      tags:
+        - '消息服务'
+      summary: '查询消息列表'
+      description:
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: tag
+          type: integer
+          in: query
+          description: 消息标签分类，tag_choices = (
+            (0, '积分'),
+            (1, '关注'),
+            (2, '提问'),
+            (3, '回答'),
+            (4, '收藏'),
+            (5, '评论'),
+            (6, '点赞'),
+            )
+        - name: page
+          in: query
+          description: 第几页
+          type: integer
+          default: 1
+        - name: page_size
+          in: query
+          description: 每页个数
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/MessageListResponse'
+    delete:
+      tags:
+        - '消息服务'
+      summary: '删除消息'
+      parameters:
+        - name: Authorization
+          type: string
+          required: true
+          description: JWT+空格+token
+          in: header
+        - name: id
+          type: string
+          in: path
+          description: 消息id
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/Success'
+
+definitions:
+  Success:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+        default: 500
+        description: 错误代码
+      msg:
+        type: string
+        description: 错误描述
+  CustomError:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+        default: 400
+      msg:
+        type: string
+        description: 用户参数错误
+  AuthError:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+        default: 401
+      msg:
+        type: string
+        description: 未登录认证
+
+  Pager:
+    type: object
+    properties:
+      page:
+        type: integer
+        description: 第几页
+      page_size:
+        type: integer
+        description: 每页个数
+      has_more:
+        type: boolean
+        description: 是否有下一页
+      total:
+        type: integer
+        description: 总量
+      max_page:
+        type: integer
+        description: 最大页数
+
+  LoginResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 返回结果
+        $ref: '#/definitions/LoginResponseData'
+  LoginResponseData:
+    type: object
+    properties:
+      token:
+        type: string
+        description: 认证令牌，使用方式是在请求headers加上 Authorization字段 JWT $token$ 注意空格
+      user_id:
+        type: integer
+        description: 用户id
+      username:
+        type: string
+        description: 用户名
+      UserID:
+        type: string
+        description: 高院用户id
+      PhotoFileName:
+        type: string
+        description: 个人照片文件--base64码
+  SignResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        properties:
+          status:
+            type: boolean
+            description: 签到状态
+          mon_sign_count:
+            type: integer
+            description: 本月签到次数
+
+  StarPutResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        properties:
+          title:
+            type: string
+            description: 收藏对象的标题
+          star_id:
+            type: string
+            description: 收藏的对象id
+          status:
+            type: boolean
+            description: 收藏状态
+  StarGetResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/StarGetData'
+      pager:
+        type: "object"
+        description: "分页信息"
+        $ref: '#/definitions/Pager'
+  StarGetData:
+    type: object
+    properties:
+      title:
+        type: string
+        description: 收藏的对象标题
+      content:
+        type: string
+        description: 收藏的对象内容
+      star_id:
+        type: string
+        description: 收藏对象的id
+      is_star:
+        type: boolean
+        description: 收藏的状态 true
+      star_type:
+        type: integer
+        description: 收藏对象所属模块
+      create_time:
+        type: string
+        description: 收藏时间  格式：yyyy-mm-dd hh:mm 如 2019-10-21 14:25
+  StarStausResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 收藏的对象id
+            status:
+              type: boolean
+              description: 收藏的状态
+  FocusStatusResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/FocusData'
+  FocusResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/FocusData'
+  FocusData:
+    type: object
+    properties:
+      focus_id:
+        type: string
+        description: 对象id
+      status:
+        type: boolean
+        description: 状态
+  VisitResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/VisitData'
+  VisitData:
+    type: object
+    properties:
+      user_id:
+        type: string
+        description: 访客id
+      name:
+        type: string
+        description: 访客
+      visit_time:
+        type: string
+        description: 访问时间，1分钟前，10分钟前等，超过24小时显示：mm-dd
+      avatar:
+        type: string
+        description: 访客头像
+
+  TopicsResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/TopicsResponseData'
+  TopicsResponseData:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 板块唯一标识
+      name:
+        type: string
+        description: 板块名称
+      cover_pics:
+        type: array
+        description: 板块封面图
+        items:
+          type: object
+          $ref: '#/definitions/Pic'
+      topics:
+        type: array
+        description: 板块专题列表
+        items:
+          type: object
+          $ref: '#/definitions/Topic'
+  Pic:
+    type: object
+    properties:
+      name:
+        type: string
+        description: 图片名称
+      url:
+        type: string
+        description: 图片地址
+
+  Topic:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 专题唯一标识
+      name:
+        type: string
+        description: 专题名称
+
+  TopicsDetailResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/TopicDetail'
+  TopicsSearchListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/TopicDetail'
+
+  TopicDetail:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 专题唯一标识
+      name:
+        type: string
+        description: 专题名称
+      create_time:
+        type: string
+        description: 创建时间  格式：yyyy-mm-dd hh:mm 如 2019-10-21 14:25
+      description:
+        type: string
+        description: 专题描述
+      cover_pics:
+        type: array
+        description: 板块封面图
+        items:
+          type: object
+          $ref: '#/definitions/Pic'
+      board:
+        type: object
+        description: 板块
+        $ref: '#/definitions/Board'
+      post_count:
+        type: integer
+        description: 总帖数
+      member_count:
+        type: integer
+        description: 成员人数
+      is_focus:
+        type: boolean
+        description: 是否关注
+
+  Board:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 板块唯一标识
+      name:
+        type: string
+        description: 板块名称
+  CarouselResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            mip_link:
+              type: string
+              description: 跳转链接
+            pics:
+              type: object
+              description: 封面图
+              properties:
+                name:
+                  type: string
+                  description: 图片名称
+                url:
+                  type: url
+                  description: url
+  PicResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 数据
+        properties:
+          id:
+            type: string
+            description: 图片id
+          name:
+            type: string
+            description: 图片名
+          url:
+            type: string
+            description: 图片连接地址
+  FileResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        $ref: '#/definitions/FileData'
+
+  FileData:
+    type: object
+    description: 数据
+    properties:
+      id:
+        type: string
+        description: 图片id
+      name:
+        type: string
+        description: 图片名
+      file:
+        type: string
+        description: 图片连接地址
+
+  ParserReponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 数据
+        properties:
+          content:
+            type: string
+            description: 解析内容
+
+  OPSResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 数据
+        properties:
+          hotline:
+            type: string
+            description: 运维热线
+
+  SearchData:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 各项数据
+        properties:
+          topic_data:
+            type: array
+            description: 专题数据
+            items:
+              type: object
+              $ref: '#/definitions/TopicDetail'
+          post_data:
+            type: array
+            description: 帖子数据
+            items:
+              type: object
+              $ref: '#/definitions/Post'
+          question_data:
+            type: array
+            description: 问答数据
+            items:
+              type: object
+              $ref: '#/definitions/Question'
+          users_data:
+            type: array
+            description: 用户数据
+            items:
+              type: object
+              $ref: '#/definitions/ExpertListResponse'
+
+  PostsResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/Post'
+      pager:
+        type: "object"
+        description: "分页信息"
+        $ref: '#/definitions/Pager'
+
+  Post:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 帖子唯一标识
+      title:
+        type: string
+        description: 帖子标题
+      creator:
+        type: object
+        $ref: '#/definitions/PostListAccount'
+      topic_id:
+        type: string
+        description: 所属专题id
+      content:
+        type: string
+        description: 帖子内容
+      pics:
+        type: array
+        description: 帖子图片
+        items:
+          type: object
+          $ref: '#/definitions/Pic'
+      is_like:
+        type: boolean
+        description: 当前用户是否点赞
+      is_star:
+        type: boolean
+        description: 当前用户是否收藏
+      post_like_count:
+        type: integer
+        description: 帖子点赞人数
+      post_comment_count:
+        type: integer
+        description: 帖子评论人数
+      create_time:
+        type: string
+        description: 帖子创建时间 可以将具体的创建时间转换成 刚刚、1小时前、今天、昨天等模糊的时间描述
+      is_top:
+        type: boolean
+        description: 是否置顶
+      extract_pics:
+        type: array
+        description: 从帖子正文中提取图片的url，列表页中存在改字段，
+        items:
+          type: string
+
+  Account:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: 账号唯一标识
+      name:
+        type: string
+        description: 账号名称
+      court_name:
+        type: string
+        description: 法院名称
+      court_yard:
+        type: string
+        description: 部门名称
+      avator:
+        type: string
+        description: 头像图片地址
+      is_expert:
+        type: boolean
+        description: 是否是专家
+      score:
+        type: integer
+        description: 积分
+      expert_description:
+        type: string
+        description: 专家简介
+  PostListAccount:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: 账号唯一标识
+      name:
+        type: string
+        description: 账号名称
+      court_name:
+        type: string
+        description: 法院名称
+      court_yard:
+        type: string
+        description: 部门名称
+      avator:
+        type: string
+        description: 头像图片地址
+  UserInfo:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: mysql账号唯一标识
+      UserID:
+        type: string
+        description: 用户唯一标识
+      name:
+        type: string
+        description: 账号名称
+      male:
+        type: boolean
+        description: 性别
+      UserBS:
+        type: string
+        description: 用户法标标识
+      email:
+        type: string
+        description: 邮箱
+      politics_status:
+        type: string
+        description: 政治面貌
+      court_name:
+        type: string
+        description: 法院名称
+      court_yard:
+        type: string
+        description: 庭室
+      JobID:
+        type: string
+        description: 岗位标识
+      avator:
+        type: string
+        description: 头像图片地址
+      domain:
+        type: string
+        description: 擅长领域
+      period:
+        type: string
+        description: 年限
+      signature:
+        type: string
+        description: 签名
+  UserPutInfo:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+
+  HomeInfo:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 返回数据
+        properties:
+          fans_count:
+            type: integer
+            description: 粉丝数
+          focus_count:
+            type: integer
+            description: 关注数
+          question_count:
+            type: integer
+            description: 提问数
+          answer_count:
+            type: integer
+            description: 回答数
+          post_count:
+            type: integer
+            description: 发帖数
+          star_count:
+            type: integer
+            description: 收藏数
+          star_post_count:
+            type: integer
+            description: 收藏帖子数
+          star_question_count:
+            type: integer
+            description: 收藏问答数
+          topic_count:
+            type: integer
+            description: 关注专题数
+  HomeFocusInfo:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回数据
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 对象id
+            name:
+              type: string
+              description: 对象名称
+            focus_time:
+              type: string
+              description: 关注时间， yyyy-mm-dd
+
+  PostCreateResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        $ref: '#/definitions/Post'
+
+  PostDetailResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        $ref: '#/definitions/PostDetail'
+
+  PostDetail:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 帖子唯一标识
+      title:
+        type: string
+        description: 帖子标题
+      creator:
+        type: object
+        $ref: '#/definitions/Account'
+      content:
+        type: string
+        description: 帖子内容
+      pics:
+        type: array
+        description: 帖子图片
+        items:
+          type: object
+          $ref: '#/definitions/Pic'
+      post_check_count:
+        type: integer
+        description: 帖子查看数量
+      post_like_count:
+        type: integer
+        description: 帖子点赞人数
+      create_time:
+        type: string
+        description: 帖子创建时间 格式：yyyy-mm-dd hh:mm 如 2019-10-21 14:25
+      attachment:
+        type: array
+        description: 附件
+        items:
+          type: object
+          $ref: '#/definitions/FileData'
+
+  PostCommentsResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/Comment'
+      pager:
+        type: "object"
+        description: "分页信息"
+        $ref: '#/definitions/Pager'
+
+  CommentResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        $ref: '#/definitions/Success'
+
+  Comment:
+    type: object
+    properties:
+      content:
+        type: string
+        description: 评论内容
+      pics:
+        type: array
+        description: 帖子图片
+        items:
+          type: object
+          $ref: '#/definitions/Pic'
+      creator:
+        type: object
+        $ref: '#/definitions/Account'
+      replier:
+        type: object
+        $ref: '#/definitions/Account'
+      comment_like_count:
+        type: integer
+        description: 评论点赞人数（第一级返回）
+      create_time:
+        type: string
+        description: 评论创建时间 格式：yyyy-mm-dd hh:mm 如 2019-10-21 14:25
+      is_like:
+        type: boolean
+        description: 当前用户是否点赞（第一级返回）
+      level:
+        type: integer
+        description: 评论的层级
+      children_count:
+        type: integer
+        description: 评论的子级数量（第一级返回）
+  PostLikeResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        properties:
+          id:
+            type: string
+            description: 点赞生成数据的id
+          post_id:
+            type: string
+            description: 帖子id
+          status:
+            type: boolean
+            description: 点赞状态
+
+  CommentLikeResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        properties:
+          id:
+            type: string
+            description: 点赞生成数据的id
+          comment_id:
+            type: string
+            description: 评论id
+          status:
+            type: boolean
+            description: 点赞状态
+
+  PostHotListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/PostHotList'
+
+  PostHotList:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 帖子id
+      title:
+        type: string
+        description: 帖子标题
+      page_view:
+        type: integer
+        description: 帖子浏览量
+
+  ThemeListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 话题id
+            name:
+              type: string
+              description: 话题名称
+            hot_level:
+              type: integer
+              description: 热度
+  ThemeNameResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: string
+          description: 话题名
+
+  ThemeDetailResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 返回结果
+        properties:
+          id:
+            type: string
+            description: 话题id
+          name:
+            type: string
+            description: 话题名称
+          create_time:
+            type: string
+            description: 创建时间
+          posts_count:
+            type: integer
+            description: 帖子数量
+          hot_level:
+            type: integer
+            description: 热度
+
+  ExpertListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/Expert'
+      pager:
+        type: "object"
+        description: "分页信息"
+        $ref: '#/definitions/Pager'
+  Expert:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: 账号唯一标识
+      name:
+        type: string
+        description: 账号名称
+      court_name:
+        type: string
+        description: 法院名称
+      court_yard:
+        type: string
+        description: 部门名称
+      is_expert:
+        type: string
+        description: 是否是专家
+      avator:
+        type: string
+        description: 头像图片地址
+      expert_description:
+        type: string
+        description: 专家简介
+      question_count:
+        type: integer
+        description: 提问数
+      answer_count:
+        type: integer
+        description: 回答数
+      focus_count:
+        type: integer
+        description: 关注数
+
+  QuestionCreateResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        $ref: '#/definitions/Question'
+  QuestionListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回数据
+        items:
+          $ref: '#/definitions/Question'
+      pager:
+        type: "object"
+        description: "分页信息"
+        $ref: '#/definitions/Pager'
+  QuestionDetailResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        $ref: '#/definitions/Question'
+
+  QuestionLikeResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 返回数据
+        properties:
+          question_id:
+            type: string
+            description: 问题id
+          status:
+            type: boolean
+            description: 状态
+  AnswerCreateResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        $ref: '#/definitions/Question'
+
+  Question:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: 问题唯一标识
+      title:
+        type: string
+        description: 问题标题
+      content:
+        type: string
+        description: 问题内容，列表页暂无该字段
+      pics:
+        type: array
+        description: 问题图片
+        items:
+          type: object
+          $ref: '#/definitions/Pic'
+      creator:
+        type: object
+        description: 提问者
+        $ref: '#/definitions/Account'
+      expert:
+        type: object
+        description: 被提问的专家
+        $ref: '#/definitions/Account'
+      parent:
+        type: object
+        description: 父级
+      answer:
+        type: object
+        description: 回答
+      answer_time:
+        type: object
+        description: 回答时间
+      answer_pics:
+        type: array
+        description: 回答图片
+        items:
+          type: object
+          $ref: '#/definitions/Pic'
+      create_time:
+        type: string
+        description: 提问时间
+      has_answer_status:
+        type: boolean
+        description: 是否
+      is_like:
+        type: boolean
+        description: 当前用户是否点赞
+      is_star:
+        type: boolean
+        description: 当前用户是否收藏
+      question_like_count:
+        type: integer
+        description: 问题点赞人数
+
+  QuestionHotListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 问题id
+            title:
+              type: string
+              description: 问题标题
+            page_view:
+              type: integer
+              description: 问题浏览量
+
+  AnnounceListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          $ref: '#/definitions/AnnounceData'
+  AnnounceData:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 对象id
+      title:
+        type: string
+        description: 文章标题
+      create_time:
+        type: string
+        description: 创建时间
+      execute_time:
+        type: string
+        description: 实施时间
+      is_top:
+        type: boolean
+        description: 是否置顶
+  AnnounceResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 返回结果
+        $ref: '#/definitions/AnnounceDetailData'
+  AnnounceDetailData:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 对象id
+      title:
+        type: string
+        description: 文章标题
+      content:
+        type: string
+        description: 文章详情
+      create_time:
+        type: string
+        description: 创建时间
+      publish_time:
+        type: string
+        description: 发布时间
+      publish_department:
+        type: string
+        description: 发布单位
+      execute_time:
+        type: string
+        description: 实施时间
+      is_top:
+        type: boolean
+        description: 是否置顶
+  HotAnnounceResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 文章对象id
+            title:
+              type: string
+              description: 文章对象标题
+            view_count:
+              type: integer
+              description: 热度数值
+  IndexAnnounceResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 公告对象id
+            title:
+              type: string
+              description: 公告对象标题
+            create_time:
+              type: string
+              description: 创建时间
+            count_down_day:
+              type: string
+              description: 倒计时天数
+
+  CourseResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            board:
+              type: object
+              description: 板块信息
+              properties:
+                id:
+                  type: string
+                  description: 板块id
+                name:
+                  type: string
+                  description: 名称
+            total:
+              type: integer
+              description: 总量
+            data:
+              type: array
+              description: 返回数据
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: 学习对象id
+                  name:
+                    type: string
+                    description: 学习对象名称
+                  description:
+                    type: string
+                    desctiption: 课程简介
+                  cover_pic:
+                    type: object
+                    description: 封面图
+                    properties:
+                      name:
+                        type: string
+                        description: 图片名称
+                      url:
+                        type: string
+                        description: url
+                  cost_point:
+                    type: integer
+                    description: 积分
+                  source_url:
+                    type: string
+                    description: 指向链接
+  IndexCourseResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 学习对象id
+            name:
+              type: string
+              description: 学习对象名称
+            topic:
+              type: string
+              description: 所属专题
+            description:
+              type: string
+              desctiption: 课程简介
+            cover_pic:
+              type: object
+              description: 封面图
+              properties:
+                name:
+                  type: string
+                  description: 图片名称
+                url:
+                  type: string
+                  description: url
+            cost_point:
+              type: integer
+              description: 积分
+            source_url:
+              type: string
+              description: 指向链接
+
+  MessageListResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: array
+        description: 返回结果
+        $ref: '#/definitions/MessageData'
+  MessageData:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 消息id
+      tag:
+        type: integer
+        description: 标签分类
+      tag_name:
+        type: string
+        descritpion: 标签名称
+      sender:
+        type: integer
+        description: 发送者id
+      msg_id:
+        type: string
+        description: 操作对象id
+      operate:
+        type: string
+        description: 消息操作
+      content:
+        type: string
+        description: 操作对象标题
+      create_time:
+        type: string
+        description: 创建时间
+      read_status:
+        type: boolean
+        descripton: 读取状态
+
+  WsResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+      data:
+        type: object
+        description: 返回结果
+        $ref: '#/definitions/WsData'
+  WsData:
+    properties:
+      tag:
+        type: integer
+        description: 标签
+      msg_count:
+        type: integer
+        description: 消息数量
+      message:
+        type: object
+        description: 具体数据信息
+        properties:
+          id:
+            type: string
+            description: 消息id
+          tag:
+            type: string
+            description: 标签分类名
+          sender:
+            type: object
+            description: 发送者
+            properties:
+              id:
+                type: string
+                description: 发送者id
+              name:
+                type: string
+                description: 发送者姓名
+          msg_id:
+            type: string
+            description: 操作对象id
+          operate:
+            type: string
+            description: 消息操作
+          create_time:
+            type: string
+            description: 创建时间
