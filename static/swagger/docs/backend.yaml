@@ -1,0 +1,73 @@
+swagger: "2.0"
+info:
+  description: "BACKEND"
+  version: "v1"
+  title: "BACKEND"
+host: "192.168.11.24:6888"
+basePath: "/api/"
+
+schemes:
+- "https"
+- "http"
+
+tags:
+- name: "账号管理"
+  description: "登录、用户、权限，主页"
+
+
+paths:
+
+  /login:
+    post:
+      tags:
+        - "账号管理"
+      summary: "登录"
+      description: ""
+      parameters:
+        - name: body
+          in: body
+          type: object
+          schema:
+            $ref: '#/definitions/LoginJsonData'
+      responses:
+        200:
+          description: 成功。
+          schema:
+            $ref: '#/definitions/Success'
+
+definitions:
+  Success:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 状态码 200 表示成功
+      msg:
+        type: string
+        description: 状态描述
+
+  Pager:
+    type: object
+    properties:
+      page:
+        type: integer
+        description: 第几页
+      page_size:
+        type: integer
+        description: 每页个数
+      total:
+        type: integer
+        description: 总量
+      max_page:
+        type: integer
+        description: 最大页数
+
+  LoginJsonData:
+    properties:
+      username:
+        type: string
+        description: 用户名
+      password:
+        type: string
+        description: 密码
+
