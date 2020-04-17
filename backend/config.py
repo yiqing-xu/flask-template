@@ -5,9 +5,18 @@
 
 # 'mysql+pymysql://user:password@host:port/db'
 
+import os
+import configparser
+
 import redis
 
 from backend.dbs.mysql import db
+
+
+parser = configparser.ConfigParser()
+parser.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf.cfg'))
+sqlconf = parser['mysql_38']
+redisconf = parser['redis_88']
 
 
 class Config(object):
@@ -16,7 +25,8 @@ class Config(object):
 
     SECRET_KEY = "\x9d\xc7JM'R\x03\xc9\x9bGv\xe6\xfd\xb92\x03\xf4\x88\x02\xf5 \xa4(?"
 
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:shield@49.4.14.38:3306/backend'
+    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{sqlconf['user']}:{sqlconf['password']}" \
+                              f"@{sqlconf['user']}:{sqlconf['password']}/{sqlconf['db']}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
 
@@ -31,12 +41,14 @@ class DevelopConfig(Config):
 
     SECRET_KEY = "\x9d\xc7JM'R\x03\xc9\x9bGv\xe6\xfd\xb92\x03\xf4\x88\x02\xf5 \xa4(?"
 
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:shield@49.4.14.38:3306/backend'
+    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{sqlconf['user']}:{sqlconf['password']}" \
+                              f"@{sqlconf['user']}:{sqlconf['password']}/{sqlconf['db']}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
 
     SESSION_TYPE = 'redis'
-    SESSION_REDIS = redis.Redis('192.168.11.88', port='6379', password='Aegis@2018!', db=15)
+    SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
+                                password=redisconf['password'], db=redisconf['db'])
 
 
 config_mapping = {
