@@ -2,7 +2,7 @@
 # @Time    : 2020/4/17 13:31
 # @Author  : xuyiqing
 # @File    : apis.py
-import time
+
 
 from flask import request
 from flask_login import login_user, logout_user, login_required
@@ -21,10 +21,8 @@ class LoginApi(Resource):
         self.args = self.parser.parse_args()
 
     def post(self):
-        response = self.gen_response()
         username = self.args.get('username')
         password = self.args.get('password')
-        start = time.time()
         user = Account.query.filter_by(username=username).first()
         if user:
             if user.check_password(password):
@@ -34,14 +32,13 @@ class LoginApi(Resource):
                     username=user.username,
                     name=user.name
                 )
-                response.update(dict(data=data))
-                print(time.time() - start)
+                response = self.gen_response(data=data)
                 return response
             else:
-                response.update(dict(msg='密码错误'))
+                response = self.gen_response(msg='密码错误')
                 abort(403, **response)
         else:
-            response.update(dict(msg='用户名不存在'))
+            response = self.gen_response(msg='用户不存在')
             abort(404, **response)
 
 
