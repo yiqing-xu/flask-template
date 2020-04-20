@@ -13,22 +13,22 @@ import redis
 from backend.dbs.mysql import db
 
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 parser = configparser.ConfigParser()
-parser.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf.cfg'))
-sqlconf = parser['mysql_38']
-redisconf = parser['redis_88']
+parser.read(os.path.join(BASE_DIR, 'backend/conf.cfg'))
 
 
 class Config(object):
 
     DEBUG = True
 
-    SECRET_KEY = "\x9d\xc7JM'R\x03\xc9\x9bGv\xe6\xfd\xb92\x03\xf4\x88\x02\xf5 \xa4(?"
+    BASE_DIR = BASE_DIR
 
-    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{sqlconf['user']}:{sqlconf['password']}" \
-                              f"@{sqlconf['user']}:{sqlconf['password']}/{sqlconf['db']}"
+    SECRET_KEY = '\xc9\xe5\x02\xe3\xbe\xcf\x08\xc5\x1c\xf1\xef\x10cf\xf7\xcf'  # os.urandom(16)
+
+    SQLALCHEMY_DATABASE_URI = ''
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = True
 
     SESSION_TYPE = 'sqlalchemy'
     SESSION_SQLALCHEMY_TABLE = 'session'
@@ -39,19 +39,26 @@ class DevelopConfig(Config):
 
     DEBUG = True
 
-    SECRET_KEY = "\x9d\xc7JM'R\x03\xc9\x9bGv\xe6\xfd\xb92\x03\xf4\x88\x02\xf5 \xa4(?"
+    SECRET_KEY = '\xc9\xe5\x02\xe3\xbe\xcf\x08\xc5\x1c\xf1\xef\x10cf\xf7\xcf'
 
+    sqlconf = parser['mysql_38']
     SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{sqlconf['user']}:{sqlconf['password']}" \
-                              f"@{sqlconf['user']}:{sqlconf['password']}/{sqlconf['db']}"
+                              f"@{sqlconf['host']}:{sqlconf['port']}/{sqlconf['db']}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = True
 
+    redisconf = parser['redis_88']
     SESSION_TYPE = 'redis'
     SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
                                 password=redisconf['password'], db=redisconf['db'])
 
 
+class ProductConfig(Config):
+
+    pass
+
+
 config_mapping = {
     'config': Config,
-    'develop': DevelopConfig
+    'develop': DevelopConfig,
+    'product': ProductConfig
 }

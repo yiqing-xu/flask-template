@@ -4,17 +4,21 @@
 # @File    : api.py
 
 
-from typing import Union
-
 from flask_restful import Resource as BaseResource
+
+from app.aborter import exception_handler
 
 
 class Resource(BaseResource):
 
-    # method_decorators = [login_required]
+    method_decorators = [exception_handler]
+
+    def dispatch_request(self, *args, **kwargs):
+        response = super(Resource, self).dispatch_request(*args, **kwargs)
+        return response
 
     @classmethod
-    def gen_response(cls, code: int = 200, msg: str = '返回成功', data: Union[dict, list] = None):
+    def gen_response(cls, code: int = 200, message: str = '返回成功', data=None) -> dict:
         if data:
-            return dict(code=code, msg=msg, data=data)
-        return dict(code=code, msg=msg)
+            return dict(code=code, message=message, data=data)
+        return dict(code=code, message=message)

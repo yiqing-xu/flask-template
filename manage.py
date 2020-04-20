@@ -10,9 +10,9 @@ from flask_migrate import MigrateCommand
 if __name__ == '__main__':
     from app import create_app
     app = create_app()
-    manage = Manager(app)
-    manage.add_command('db', MigrateCommand)
-    manage.run()
+    manager = Manager(app)
+    manager.add_command('db', MigrateCommand)
+    manager.run()
 
 
 if __name__ != '__main__':
