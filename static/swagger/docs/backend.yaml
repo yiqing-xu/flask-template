@@ -7,7 +7,6 @@ host: "192.168.11.24:6888"
 basePath: "/api/"
 
 schemes:
-- "https"
 - "http"
 
 tags:

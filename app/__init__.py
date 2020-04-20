@@ -13,16 +13,6 @@ from backend.config import config_mapping
 from app.users.models import Account
 
 
-migrate = Migrate()
-session = Session()
-login_manager = LoginManager()
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Account.query.get(user_id)
-
-
 def create_app():
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
     app.config.from_object(config_mapping['develop'])
@@ -33,10 +23,19 @@ def create_app():
     app.register_blueprint(users_bp)
 
     from backend.dbs.mysql import db
-
     db.init_app(app)
+
+    migrate = Migrate()
     migrate.init_app(app, db)
-    login_manager.init_app(app)
+
+    session = Session()
     session.init_app(app)
+
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Account.query.get(user_id)
 
     return app
