@@ -27,3 +27,36 @@ class BaseModel(db.Model):
             self.id = gen_uid()
         db.session.add(self)
         db.session.commit()
+
+    @classmethod
+    def bulk_from_iter(cls, objs):
+        for obj in objs:
+            if not obj.id:
+                obj.id = gen_uid()
+            db.session.add(obj)
+            db.session.commit()
+
+    @classmethod
+    def bulk_save_objects(cls, objs):
+        for obj in objs:
+            if not obj.id:
+                obj.id = gen_uid()
+        db.session.bulk_save_objects(objs)
+
+    @classmethod
+    def bulk_insert_mappings(cls, dicts):
+        for item in dicts:
+            if not item.get('id'):
+                item.update(dicts(id=gen_uid()))
+        db.session.bulk_insert_mappings(dicts)
+        db.session.commit()
+
+    def bulk_execute_insert(self, dicts):
+        for item in dicts:
+            if not item.get('id'):
+                item.update(dicts(id=gen_uid()))
+        db.session.execute(
+            self.__table__.insert(),
+            dicts
+        )
+        db.session.commit()
