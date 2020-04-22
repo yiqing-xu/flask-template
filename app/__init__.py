@@ -13,9 +13,9 @@ from backend.config import config_mapping
 from app.users.models import Account
 
 
-def create_app():
+def create_app(cfg='develop'):
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
-    app.config.from_object(config_mapping['develop'])
+    app.config.from_object(config_mapping[cfg])
 
     from app.swagger import swagger_bp
     from app.users import users_bp

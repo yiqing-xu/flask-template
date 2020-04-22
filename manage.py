@@ -7,6 +7,7 @@
 from flask_script import Manager
 from flask_migrate import MigrateCommand
 
+
 if __name__ == '__main__':
     from app import create_app
     app = create_app()
@@ -16,4 +17,5 @@ if __name__ == '__main__':
 
 
 if __name__ != '__main__':
-    pass
+    from app import create_app
+    app = create_app('product')
