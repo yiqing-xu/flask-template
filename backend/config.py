@@ -49,10 +49,14 @@ class DevelopConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     redisconf = parser['redis_88']
-    REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}/{redisconf['db']}"
-    SESSION_TYPE = 'redis'
-    SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
-                                password=redisconf['password'], db=redisconf['db'])
+    # REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}/{redisconf['db']}"
+    REDIS_URL = "redis://:Aegis@2018!@192.168.11.88:6379/0"
+    # SESSION_TYPE = 'redis'
+    # SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
+    #                             password=redisconf['password'], db=redisconf['db'])
+    SESSION_TYPE = 'sqlalchemy'
+    SESSION_SQLALCHEMY_TABLE = 'session'
+    SESSION_SQLALCHEMY = db
 
 
 class ProductConfig(Config):

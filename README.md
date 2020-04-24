@@ -44,6 +44,51 @@
 ```
 启动服务器：
 - 开发
-    - python manage.py runserver -h 0.0.0.0 -p 8000 -r -d
+    - python manage.py runserver -h 0.0.0.0 -p 8000 -r -d  启动wsgi服务
+    - python manage.py socketserver -h 0.0.0.0 -p 6888     启动socketio服务(内带wsgi)
 - 生产
-    - gunicorn manage:app -b 0.0.0.0:8000 -w 4
+    以uwsgi单进程，多端口的方式启动多个进程(gunicorn不支持sticky sessions)
+    uwsig --http :6888 --eventlet 1000 --http-websockets --master --wsgi-file manage.py --callable app
+```
+使用nginx的负载均衡，
+负载均衡器必须配置为将来自给定客户端的所有HTTP请求始终转发给同一个worker，
+使用ip_hash指令将路由为 /socketio/ 的请求转发到同一个端口即可
+Flask-SocketIO支持负载均衡器后面的多个workers。
+部署多个workers使得使用Flask-SocketIO的应用程序能够在多个进程和主机之间传播客户端连接，
+并以这种方式进行扩展以支持大量的并发客户端。
+```
+```
+nginx.conf
+
+upstream socketio_nodes {
+    ip_hash;
+    server 127.0.0.1:8000;
+    server 127.0.0.1:8001;
+    server 127.0.0.1:8002;
+    server 127.0.0.1:8003;
+    # to scale the app, just add more nodes here!
+}
+server {
+    listen 80;
+    server_name dispatch-sandbox.iqusong.com;
+    access_log /var/log/nginx/access_log main;
+    error_log /var/log/nginx/error_log info;
+    location /api {
+        proxy_pass http://socketio_nodes;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+     }
+    location /socket.io{
+        proxy_pass http://socketio_nodes/socket.io;
+        proxy_http_version 1.1;
+        proxy_redirect off;
+        proxy_buffering off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-UP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+     }
+}
+```

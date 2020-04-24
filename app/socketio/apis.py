@@ -38,6 +38,7 @@ class CustomSocketNamespace(Namespace):
         建立连接
         :return:
         """
+        print(current_app.wsgi_app)
         if not current_user.is_authenticated:
             return
         try:

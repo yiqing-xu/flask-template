@@ -38,8 +38,8 @@ def create_app(cfg='develop'):
     def load_user(user_id):
         return Account.query.get(user_id)
 
-    # import eventlet
-    # eventlet.monkey_patch()  # monkey patch -  gevent import monkey / monkey.patch_all()
+    import eventlet
+    eventlet.monkey_patch()  # monkey patch -  gevent import monkey / monkey.patch_all()
     # from gevent import monkey
     # monkey.patch_all()
     from app.socketio import socketio
