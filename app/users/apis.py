@@ -4,6 +4,7 @@
 # @File    : apis.py
 
 
+from flask import request, session, sessions
 from flask_login import login_user, logout_user, login_required
 from flask_restful import reqparse, marshal_with
 
@@ -17,12 +18,12 @@ class LoginApi(Resource):
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('username', type=str, location='json')
-        self.parser.add_argument('password', type=str, location='json')
+        self.parser.add_argument('username', type=str, location='args')
+        self.parser.add_argument('password', type=str, location='args')
         self.args = self.parser.parse_args()
 
     @marshal_with(users_fields_data)
-    def post(self):
+    def get(self):
         username = self.args.username
         password = self.args.password
         user = Account.query.filter_by(username=username).first()
@@ -36,11 +37,11 @@ class LoginApi(Resource):
         else:
             abort(404, '该用户不存在')
 
-    @marshal_with(users_fields_datas)
-    def get(self):
-        users = Account.query.all()
-        data = self.gen_response(data=users)
-        return data
+    # @marshal_with(users_fields_datas)
+    # def get(self):
+    #     users = Account.query.all()
+    #     data = self.gen_response(data=users)
+    #     return data
 
 
 class RegisterApi(Resource):

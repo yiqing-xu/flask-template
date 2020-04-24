@@ -35,7 +35,7 @@ class Account(UserMixin, BaseModel):
         return check_password_hash(self._password, user_pwd)
 
     def is_valid(self, username):
-        if not self.query.filter_by(username=username):
+        if not self.query.filter_by(username=username).count():
             return True
         else:
             abort(409, '用户名重复')

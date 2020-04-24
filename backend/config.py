@@ -30,6 +30,8 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = ''
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    REDIS_URL = "redis://"
+
     SESSION_TYPE = 'sqlalchemy'
     SESSION_SQLALCHEMY_TABLE = 'session'
     SESSION_SQLALCHEMY = db
@@ -47,6 +49,7 @@ class DevelopConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     redisconf = parser['redis_88']
+    REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}/{redisconf['db']}"
     SESSION_TYPE = 'redis'
     SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
                                 password=redisconf['password'], db=redisconf['db'])
@@ -54,7 +57,7 @@ class DevelopConfig(Config):
 
 class ProductConfig(Config):
 
-    pass
+    DEBUG = False
 
 
 config_mapping = {

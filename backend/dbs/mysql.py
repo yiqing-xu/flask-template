@@ -22,10 +22,26 @@ class BaseModel(db.Model):
         for field, val in kwargs.items():
             setattr(self, field, val)
 
+    @classmethod
+    def commit(cls):
+        db.session.commit()
+
     def save(self):
         if not self.id:
             self.id = gen_uid()
         db.session.add(self)
+        db.session.commit()
+
+    @classmethod
+    def patch(cls):
+        db.session.commit()
+
+    @classmethod
+    def add_all(cls, objs):
+        for obj in objs:
+            if not obj.id:
+                obj.id = gen_uid()
+        db.session.add_all(objs)
         db.session.commit()
 
     @classmethod

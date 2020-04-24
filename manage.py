@@ -10,12 +10,18 @@ from flask_migrate import MigrateCommand
 
 if __name__ == '__main__':
     from app import create_app
-    app = create_app()
+    app, socketio = create_app()
     manager = Manager(app)
     manager.add_command('db', MigrateCommand)
+
+    @manager.option('-h', '--host', dest='host', default='0.0.0.0')
+    @manager.option('-p', '--port', dest='port', default=6888)
+    def socketserver(host, port):
+        socketio.run(app, host=host, port=port)
+
     manager.run()
 
 
 if __name__ != '__main__':
     from app import create_app
-    app = create_app('product')
+    app, _ = create_app('develop')
