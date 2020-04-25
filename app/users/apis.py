@@ -23,7 +23,7 @@ class LoginApi(Resource):
         self.args = self.parser.parse_args()
 
     @marshal_with(users_fields_data)
-    def get(self):
+    def post(self):
         username = self.args.username
         password = self.args.password
         user = Account.query.filter_by(username=username).first()
