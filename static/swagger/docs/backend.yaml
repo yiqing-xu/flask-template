@@ -34,6 +34,26 @@ paths:
           schema:
             $ref: '#/definitions/Success'
 
+  /word_cloud:
+    post:
+      tags:
+        - 工具
+      parameters:
+        - name: bg_img
+          type: file
+          in: formData
+          required: true
+          description: 背景图
+        - name: text
+          type: string
+          in: formData
+          description: 文本
+      responses:
+        200:
+          description: OK
+
+
+
 definitions:
   Success:
     type: object

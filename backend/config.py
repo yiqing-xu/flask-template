@@ -14,6 +14,9 @@ from backend.dbs.mysql import db
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT)
 
 parser = configparser.ConfigParser()
 parser.read(os.path.join(BASE_DIR, 'backend/conf.cfg'))
@@ -24,6 +27,7 @@ class Config(object):
     DEBUG = True
 
     BASE_DIR = BASE_DIR
+    MEDIA_ROOT = MEDIA_ROOT
 
     SECRET_KEY = '\xc9\xe5\x02\xe3\xbe\xcf\x08\xc5\x1c\xf1\xef\x10cf\xf7\xcf'  # os.urandom(16)
 
@@ -49,14 +53,10 @@ class DevelopConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     redisconf = parser['redis_88']
-    # REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}/{redisconf['db']}"
-    REDIS_URL = "redis://:Aegis@2018!@192.168.11.88:6379/0"
-    # SESSION_TYPE = 'redis'
-    # SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
-    #                             password=redisconf['password'], db=redisconf['db'])
-    SESSION_TYPE = 'sqlalchemy'
-    SESSION_SQLALCHEMY_TABLE = 'session'
-    SESSION_SQLALCHEMY = db
+    REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}/{redisconf['db']}"
+    SESSION_TYPE = 'redis'
+    SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
+                                password=redisconf['password'], db=redisconf['db'])
 
 
 class ProductConfig(Config):

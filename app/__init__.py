@@ -19,8 +19,10 @@ def create_app(cfg='develop'):
 
     from app.swagger import swagger_bp
     from app.users import users_bp
+    from app.tools import tools_bp
     app.register_blueprint(swagger_bp)
     app.register_blueprint(users_bp)
+    app.register_blueprint(tools_bp)
 
     from backend.dbs.mysql import db
     db.init_app(app)
@@ -38,8 +40,8 @@ def create_app(cfg='develop'):
     def load_user(user_id):
         return Account.query.get(user_id)
 
-    import eventlet      # monkey.patch_all()
-    eventlet.monkey_patch()  # from gevent import monkey
+    # import eventlet      # monkey.patch_all()
+    # eventlet.monkey_patch()  # from gevent import monkey
     from app.socketio import socketio
     socketio.init_app(app, cors_allowed_origins="*", message_queue=app.config['REDIS_URL'])
 
