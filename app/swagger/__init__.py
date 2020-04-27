@@ -11,4 +11,4 @@ swagger_bp = Blueprint('swagger', __name__)
 
 api = Api(swagger_bp)
 
-import app.swagger.routes
+from app.swagger import routes

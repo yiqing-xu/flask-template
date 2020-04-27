@@ -11,7 +11,7 @@ from flask_login import current_user
 from flask_socketio import Namespace
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-from .models import RoomModel, MessageModel
+from app.socketios.models import RoomModel, MessageModel
 
 
 class CustomSocketNamespace(Namespace):

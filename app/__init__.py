@@ -42,7 +42,7 @@ def create_app(cfg='develop'):
     # eventlet.monkey_patch()
     from gevent import monkey
     monkey.patch_all()
-    from app.socketio import socketio
+    from app.socketios import socketio
     socketio.init_app(app, cors_allowed_origins="*", message_queue=app.config['REDIS_URL'])
 
     return app, socketio

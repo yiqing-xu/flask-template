@@ -13,4 +13,4 @@ users_bp = Blueprint('users',
 
 api = Api(users_bp, prefix='/api')
 
-import app.users.routes
+from app.users import routes

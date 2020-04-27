@@ -15,10 +15,10 @@ class Account(UserMixin, BaseModel):
 
     __tablename__ = 'users_account'
 
-    username = db.Column(db.String(20), unique=True)
-    _password = db.Column(db.String(255))
-    email = db.Column(db.String(30), nullable=True)
-    name = db.Column(db.String(10), nullable=True)
+    username = db.Column(db.String(20), unique=True, comment='用户名')
+    _password = db.Column(db.String(255), comment='密码')
+    email = db.Column(db.String(30), comment='邮箱')
+    name = db.Column(db.String(10), comment='姓名')
 
     def __init__(self, **kwargs):
         super(Account, self).__init__(**kwargs)
@@ -39,3 +39,10 @@ class Account(UserMixin, BaseModel):
             return True
         else:
             abort(409, '用户名重复')
+
+
+# class Permission(BaseModel):
+#
+#     __tablename__ = 'users_permission'
+#
+#     user = db.Column(db.BigInteger, db.ForeignKey('users_account.id', ondelete='CASCADE'), )

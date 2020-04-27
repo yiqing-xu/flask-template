@@ -6,7 +6,7 @@
 
 from flask_socketio import SocketIO
 
-from app.socketio.apis import CustomSocketNamespace
+from app.socketios.apis import CustomSocketNamespace
 
 socketio = SocketIO()
 socketio.on_namespace(CustomSocketNamespace('/ws'))
