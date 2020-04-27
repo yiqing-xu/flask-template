@@ -25,6 +25,7 @@ class BaseModel(db.Model):
     @classmethod
     def commit(cls):
         db.session.commit()
+        db.session.close()
 
     def save(self):
         if not self.id:

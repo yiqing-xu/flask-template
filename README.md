@@ -48,7 +48,7 @@
     - python manage.py socketserver -h 0.0.0.0 -p 6888     启动socketio服务(内带wsgi)
 - 生产
     以uwsgi单进程，多端口的方式启动多个进程(gunicorn不支持sticky sessions)
-    uwsig --http :6888 --eventlet 1000 --http-websockets --master --wsgi-file manage.py --callable app
+    uwsig --http :6888 --gevent 1000 --http-websockets --master --wsgi-file manage.py --callable app
 ```
 使用nginx的负载均衡，
 负载均衡器必须配置为将来自给定客户端的所有HTTP请求始终转发给同一个worker，
@@ -66,13 +66,10 @@ upstream socketio_nodes {
     server 127.0.0.1:8001;
     server 127.0.0.1:8002;
     server 127.0.0.1:8003;
-    # to scale the app, just add more nodes here!
 }
 server {
     listen 80;
-    server_name dispatch-sandbox.iqusong.com;
-    access_log /var/log/nginx/access_log main;
-    error_log /var/log/nginx/error_log info;
+    server_name host;
     location /api {
         proxy_pass http://socketio_nodes;
         proxy_set_header Host $host;

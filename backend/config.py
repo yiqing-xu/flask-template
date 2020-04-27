@@ -25,7 +25,7 @@ class Config(object):
 
     BASE_DIR = BASE_DIR
 
-    SECRET_KEY = '\xc9\xe5\x02\xe3\xbe\xcf\x08\xc5\x1c\xf1\xef\x10cf\xf7\xcf'  # os.urandom(16)
+    SECRET_KEY = '\xc9\xe5\x02\xe3\xbe\xcf\x08\xc5\x1c\xf1\xef\x10cf\xf7\xcf'
 
     SQLALCHEMY_DATABASE_URI = ''
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -48,20 +48,31 @@ class DevelopConfig(Config):
                               f"@{sqlconf['host']}:{sqlconf['port']}/{sqlconf['db']}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    redisconf = parser['redis_88']
-    # REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}/{redisconf['db']}"
-    REDIS_URL = "redis://:Aegis@2018!@192.168.11.88:6379/0"
-    # SESSION_TYPE = 'redis'
-    # SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
-    #                             password=redisconf['password'], db=redisconf['db'])
-    SESSION_TYPE = 'sqlalchemy'
-    SESSION_SQLALCHEMY_TABLE = 'session'
-    SESSION_SQLALCHEMY = db
+    redisconf = parser['redis_hw']
+
+    REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}:{redisconf['port']}/15"
+    SESSION_TYPE = 'redis'
+    SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
+                                password=redisconf['password'], db=redisconf['db'])
 
 
 class ProductConfig(Config):
 
     DEBUG = False
+
+    SECRET_KEY = '\xc9\xe5\x02\xe3\xbe\xcf\x08\xc5\x1c\xf1\xef\x10cf\xf7\xcf'
+
+    sqlconf = parser['mysql_38']
+    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{sqlconf['user']}:{sqlconf['password']}" \
+                              f"@{sqlconf['host']}:{sqlconf['port']}/{sqlconf['db']}"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    redisconf = parser['redis_hw']
+
+    REDIS_URL = f"redis://:{redisconf['password']}@{redisconf['host']}:{redisconf['port']}/15"
+    SESSION_TYPE = 'redis'
+    SESSION_REDIS = redis.Redis(host=redisconf['host'], port=redisconf['port'],
+                                password=redisconf['password'], db=redisconf['db'])
 
 
 config_mapping = {

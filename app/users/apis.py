@@ -37,11 +37,11 @@ class LoginApi(Resource):
         else:
             abort(404, '该用户不存在')
 
-    # @marshal_with(users_fields_datas)
-    # def get(self):
-    #     users = Account.query.all()
-    #     data = self.gen_response(data=users)
-    #     return data
+    @marshal_with(users_fields_datas)
+    def get(self):
+        users = Account.query.all()
+        data = self.gen_response(data=users)
+        return data
 
 
 class RegisterApi(Resource):

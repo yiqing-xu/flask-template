@@ -38,29 +38,30 @@ class CustomSocketNamespace(Namespace):
         建立连接
         :return:
         """
-        print(current_app.wsgi_app)
         if not current_user.is_authenticated:
             return
+        sid = getattr(request, 'sid')
         try:
             room = RoomModel.query.filter_by(user_id=current_user.id).one()
         except NoResultFound:
-            room = RoomModel(user_id=current_user.id, room=getattr(request, 'sid'))
+            room = RoomModel(user_id=current_user.id, room=sid)
             room.save()
         except MultipleResultsFound:
             RoomModel.query.filter_by(user_id=current_user.id).delete()
             RoomModel.commit()
-            room = RoomModel(user_id=current_user.id, room=getattr(request, 'sid'))
+            room = RoomModel(user_id=current_user.id, room=sid)
             room.save()
         else:
-            room.room = getattr(request, 'sid')
+            room.room = sid
             room.commit()
         finally:
-            self.emit('receive_message', data=self.init_data(dict(code=200,
-                                                                  msg='连接成功',
-                                                                  data=dict(user_id=current_user.id,
-                                                                            username=current_user.username)
-                                                                  )),
-                      room=getattr(request, 'sid'))
+            self.emit('receive_message',
+                      data=self.init_data(dict(code=200,
+                                               msg='连接成功',
+                                               data=dict(user_id=current_user.id,
+                                                         username=current_user.username)
+                                               )),
+                      room=sid)
 
     def on_disconnect(self):
         """
@@ -68,7 +69,6 @@ class CustomSocketNamespace(Namespace):
         :return:
         """
         # self.close_room(room=getattr(request, 'sid'))
-
         RoomModel.query.filter_by(user_id=current_user.id).delete()
         RoomModel.commit()
 

@@ -19,9 +19,9 @@ if __name__ == '__main__':
     def socketserver(host, port):
         socketio.run(app, host=host, port=port)
 
-    manager.run()
+    socketio.run(app, host='0.0.0.0', port=6888)
 
 
 if __name__ != '__main__':
     from app import create_app
-    app, _ = create_app('develop')
+    app, socketio = create_app('product')

@@ -38,8 +38,10 @@ def create_app(cfg='develop'):
     def load_user(user_id):
         return Account.query.get(user_id)
 
-    import eventlet      # monkey.patch_all()
-    eventlet.monkey_patch()  # from gevent import monkey
+    # import eventlet
+    # eventlet.monkey_patch()
+    from gevent import monkey
+    monkey.patch_all()
     from app.socketio import socketio
     socketio.init_app(app, cors_allowed_origins="*", message_queue=app.config['REDIS_URL'])
 

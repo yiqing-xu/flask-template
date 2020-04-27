@@ -11,10 +11,10 @@
 
     <script type="text/javascript" charset="utf-8">
         $(document).ready(function() {
-            var socket = io('ws://192.168.11.24:6888/ws');
+            var socket = io('ws://192.168.1.102/ws');
             // socket.emit('message', {'data': '成功连接'});
             socket.on('receive_message', function(msg) {
-                debugger;
+
                     $('#log').append('<br>' + $('<div/>').text('Received #' + ': ' + msg).html());
                 });
 
